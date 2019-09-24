@@ -1,4 +1,5 @@
 ## parsing command arguments
+
 for (arg in commandArgs(TRUE)) {
   eval(parse(text=arg))
 }
@@ -21,8 +22,46 @@ estMeanPrimes = function (x) {
   return (mean(x[ind]))
 }
 
-# simulate data
-x = rnorm(n)
+## MSE calculation
+mseCalc = function (x,trueM) {
+  
+mse = 0
 
-# estimate mean
-estMeanPrimes(x)
+  for(m in x)
+  {
+    mse = (m-trueM)^2 + mse
+  }
+  return(mse/length(x))
+}
+
+
+# simulate data
+
+#set seed
+set.seed(seed)
+
+#create mean vectors
+primeMean= numeric(rep)
+sampleMean = numeric(rep)
+
+#loop through reps
+for (i in 1:rep){
+
+#set distribution
+if(dist == "gaussian"){
+x = rnorm(n)
+} else if(dist =="t1"){
+  x = rt(n,1)
+} else if(dist =="t5"){
+  x = rt(n,5)
+} 
+
+# estimate means
+primeMean[i]=estMeanPrimes(x)
+sampleMean[i]=mean(x)
+
+}
+
+
+print(mseCalc(primeMean,0))
+print(mseCalc(sampleMean,0))
