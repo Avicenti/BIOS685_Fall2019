@@ -2,29 +2,58 @@
 title: "hw1"
 author: "Anthony Vicenti"
 date: "September 15, 2019"
-output: html_document
+output:
+  #ioslides_presentation: default
+    html_document:
+      toc: true
+      toc_depth: 4  
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+##Question 2
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+1. 
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+Number of Individuals
 
-```{r cars}
-summary(cars)
-```
+    ```{bash}
+    awk 'END { print NR }' /share/hw1/merge-geno.fam
+    ```
 
-## Including Plots
+Number of SNPS
 
-You can also embed plots, for example:
+    ```{bash}
+    awk 'END { print NR }' /share/hw1/merge-geno.bim
+    ```
 
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
+2. 
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Which Chromosomes Are Present and How Many SNPS in Each Chromosome
+    ```{bash}
+    awk  '{A[$1]++} END{for(i=1;i<24;i++)print i,A[i]}' /share/hw1/merge-geno.bim
+    ```
+    
+3.
+
+How Many SNPS Are Located Within MAP4 Gene
+    ```{bash}
+    awk '{if ($1 == 3 && $4 >= 47892180 && $4 <= 48130769) count++} END{print count}' /share/hw1/merge-geno.bim
+    ```
+
+4.
+
+Print First 10 Lines Of Mendel SNP Definition File. Can Output to a File With > "Outfile".
+
+    ```{bash}
+    awk '{print $2,$1,$4} NR==10{exit}' OFS=',' /share/hw1/merge-geno.bim 
+    ```
+
+Print First 10 Lines Of Mendel Pedigree File. Can Output to a File With > "Outfile".
+
+    ```{bash}
+   awk '{gsub("T2DG", ""); if($5==1) $5="M"; if($5==2) $5="F"; print $1,$2,$3,$4,$5,""} NR==20{exit}' OFS=',' /share/hw1/merge-geno.fam
+    ```
+    
