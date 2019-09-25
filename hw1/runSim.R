@@ -1,5 +1,8 @@
-## parsing command arguments
+gaussian = "gaussian"
+t1 = "t1"
+t5 ="t5"
 
+## parsing command arguments
 for (arg in commandArgs(TRUE)) {
   eval(parse(text=arg))
 }

@@ -311,7 +311,7 @@ awk '{print $2,$1,$4} NR==10{exit}' OFS=',' /share/hw1/merge-geno.bim
 </ol>
 <p>Modify runSim.R Script</p>
 <pre><code>```bash
-   Rscript runSim.R seed=123 n=100 dist=&quot;'t5'&quot;  rep=100
+   Rscript runSim.R seed=123 n=100 dist=t5  rep=100
 ```
 
 ```
@@ -322,6 +322,48 @@ awk '{print $2,$1,$4} NR==10{exit}' OFS=',' /share/hw1/merge-geno.bim
 <li></li>
 </ol>
 <p>Modify autoSim.R file</p>
+<pre><code>```bash
+   Rscript autoSim.R
+```
+
+```
+## [1] &quot;sysCall=nohup Rscript runSim.R  n=100 seed=280 rep=50 dist=gaussian  &gt;  n100gaussian.txt&quot;
+## [1] &quot;sysCall=nohup Rscript runSim.R  n=100 seed=280 rep=50 dist=t1  &gt;  n100t1.txt&quot;
+## [1] &quot;sysCall=nohup Rscript runSim.R  n=100 seed=280 rep=50 dist=t5  &gt;  n100t5.txt&quot;
+## [1] &quot;sysCall=nohup Rscript runSim.R  n=200 seed=280 rep=50 dist=gaussian  &gt;  n200gaussian.txt&quot;
+## [1] &quot;sysCall=nohup Rscript runSim.R  n=200 seed=280 rep=50 dist=t1  &gt;  n200t1.txt&quot;
+## [1] &quot;sysCall=nohup Rscript runSim.R  n=200 seed=280 rep=50 dist=t5  &gt;  n200t5.txt&quot;
+## [1] &quot;sysCall=nohup Rscript runSim.R  n=300 seed=280 rep=50 dist=gaussian  &gt;  n300gaussian.txt&quot;
+## [1] &quot;sysCall=nohup Rscript runSim.R  n=300 seed=280 rep=50 dist=t1  &gt;  n300t1.txt&quot;
+## [1] &quot;sysCall=nohup Rscript runSim.R  n=300 seed=280 rep=50 dist=t5  &gt;  n300t5.txt&quot;
+## [1] &quot;sysCall=nohup Rscript runSim.R  n=400 seed=280 rep=50 dist=gaussian  &gt;  n400gaussian.txt&quot;
+## [1] &quot;sysCall=nohup Rscript runSim.R  n=400 seed=280 rep=50 dist=t1  &gt;  n400t1.txt&quot;
+## [1] &quot;sysCall=nohup Rscript runSim.R  n=400 seed=280 rep=50 dist=t5  &gt;  n400t5.txt&quot;
+## [1] &quot;sysCall=nohup Rscript runSim.R  n=500 seed=280 rep=50 dist=gaussian  &gt;  n500gaussian.txt&quot;
+## [1] &quot;sysCall=nohup Rscript runSim.R  n=500 seed=280 rep=50 dist=t1  &gt;  n500t1.txt&quot;
+## [1] &quot;sysCall=nohup Rscript runSim.R  n=500 seed=280 rep=50 dist=t5  &gt;  n500t5.txt&quot;
+```</code></pre>
+<ol start="3" style="list-style-type: decimal">
+<li></li>
+</ol>
+<p>Run Script That Creates Table</p>
+<pre><code>```bash
+   Rscript hw1table.R
+```
+
+```
+##                            t1          t5    gaussian
+## 100  PrimeAverage  2808.42600 0.066428440 0.041467370
+## 100  SampleAverage  230.23720 0.016750780 0.009483390
+## 200  PrimeAverage   799.31390 0.041847880 0.018754360
+## 200  SampleAverage   95.87976 0.007666523 0.007163651
+## 300  PrimeAverage   446.40240 0.024122430 0.020025440
+## 300  SampleAverage   53.57742 0.005471060 0.003534446
+## 400  PrimeAverage    19.45133 0.024331410 0.011268900
+## 400  SampleAverage   20.53370 0.003517023 0.002970676
+## 500  PrimeAverage   217.26890 0.011676280 0.011176900
+## 500  SampleAverage   20.78780 0.003354976 0.002591991
+```</code></pre>
 </div>
 
 

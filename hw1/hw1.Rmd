@@ -64,10 +64,20 @@ Print First 10 Lines Of Mendel Pedigree File. Can Output to a File With > "Outfi
 Modify runSim.R Script
 
     ```{bash}
-   Rscript runSim.R seed=123 n=100 dist="'t5'"  rep=100
+   Rscript runSim.R seed=123 n=100 dist=t5  rep=100
     ```
 
 2.
 
 Modify autoSim.R file
+
+    ```{bash}
+   Rscript autoSim.R
+    ```
     
+3.
+
+Run Script That Creates Table
+    ```{bash}
+   Rscript hw1table.R
+    ```
