@@ -1,83 +1,142 @@
 ---
-title: "hw1"
-author: "Anthony Vicenti"
-date: "September 15, 2019"
-output:
-  #ioslides_presentation: default
-    html_document:
-      toc: true
-      toc_depth: 4  
+title: "Bios CPH685 Homework 1-Anthony Vicenti"
+subtitle: Due Sep 25, 2019 @ 11:59PM
+output: 
+      html_document:
+        toc: true
+        toc_depth: 4
+csl: ../apa.csl
 ---
+# Q1. Git/GitHub
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+**No handwritten homework reports are accepted for this course.** We work with Git and GitHub. Efficient and abundant use of Git, e.g., frequent and well-documented commits, is an important criterion for grading your homework.
 
-##Question 2
+1. Apply for the [Student Developer Pack](https://education.github.com/pack) at GitHub using your UA email.
+
+2. Create a **private** repository `bios-cph685-2019-fall` (or something makes sense to you) and add `jinjinzhou` as your collaborators with write permission.
+
+3. Top directories of the repository should be `hw1`, `hw2`, ... Maintain two branches `master` and `develop`. The `develop` branch will be your main playground, the place where you develop solution (code) to homework problems and write up report. The `master` branch will be your presentation area. Submit your homework files (R markdown file `Rmd`, `html` file converted from R markdown, all code and data sets to reproduce results) in `master` branch.
+
+4. After each homework due date, I will check out your master branch for grading. Tag each of your homework submissions with tag names `hw1`, `hw2`, ... Tagging time will be used as your submission time. That means if you tag your `hw1` submission after deadline, penalty points will be deducted for late submission.
+
+# Q2. Linux Shell Commands
+
+The `35.230.38.116:/share/hw1` folder contains a typical genetic data set in plink format. If interested, you can read plink documentation at <http://zzz.bwh.harvard.edu/plink/>. But it's definitely not necessary for this homework.
+
+- `merge-geno.bim` contains information of each genetic marker (SNP). Each line is a SNP and has 6 fields:  
+`Chromosome`, `SNP ID`, `Genetic Distance (morgan)`, `Base Pair Position (bp)`, `Allele 1`, `Allele 2`.
+    ```{bash,eval=F}
+    head /share/hw1/merge-geno.bim
+    ```
+
+- `merge-geno.fam` contains individual information. Each line is one individual and has 6 fields:  
+`Family ID`, `Person ID`, `Father ID`, `Mother ID`, `Sex` coded as 1 (male) or 2 (female), `Affection Status`  
+`Father ID = 0` means that person's father is not in this data set. Similarly `Mother ID` = 0 means that person's mother is not in this data set.
+    ```{bash,eval=F}
+    head -20 /share/hw1/merge-geno.fam
+    ```
+
+- `merge-geno.bed` contains genotypes of each individual in binary format. We don't need this file for this homework.
+
+Please, do **not** put these data files into Git; they are huge. You even don't need to copy them into your directory. Just read from the data folder `/share/hw1` directly.
+
+Use Linux shell commands to answer following questions. 
 
 1. 
+How many persons are in the data set (statisticians call this `n`)? 
+```{bash}
+awk 'END { print NR }' /share/hw1/merge-geno.fam
+```
+How many SNPs are in the data set (statisticians call this `p`)?
+```{bash}
+awk 'END { print NR }' /share/hw1/merge-geno.bim
+```
 
-Number of Individuals
 
-    ```{bash}
-    awk 'END { print NR }' /share/hw1/merge-geno.fam
-    ```
-
-Number of SNPS
-
-    ```{bash}
-    awk 'END { print NR }' /share/hw1/merge-geno.bim
-    ```
-
-2. 
-
-Which Chromosomes Are Present and How Many SNPS in Each Chromosome
-    ```{bash}
+2. Which chromosomes does this data set contain? How many SNPs are in each chromosome?
+```{bash}
     awk  '{A[$1]++} END{for(i=1;i<24;i++)print i,A[i]}' /share/hw1/merge-geno.bim
-    ```
-    
-3.
+```
 
-How Many SNPS Are Located Within MAP4 Gene
-    ```{bash}
+
+3. MAP4 (microtubule-associated protein 4) is a gene on chromosome 3 spanning positions 47,892,180 bp -- 48,130,769 bp. How many SNPs are located within MAP4 gene?
+
+```{bash}
     awk '{if ($1 == 3 && $4 >= 47892180 && $4 <= 48130769) count++} END{print count}' /share/hw1/merge-geno.bim
-    ```
+```
 
-4.
+4. Statistical geneticists often have to reformat a data set to feed into various analysis programs. For example, to use the Mendel software <http://www.genetics.ucla.edu/software/mendel>, we have to reformat the data set to be read by Mendel.
 
-Print First 10 Lines Of Mendel SNP Definition File. Can Output to a File With > "Outfile".
-
-    ```{bash}
-    awk '{print $2,$1,$4} NR==10{exit}' OFS=',' /share/hw1/merge-geno.bim 
-    ```
-
-Print First 10 Lines Of Mendel Pedigree File. Can Output to a File With > "Outfile".
-
-    ```{bash}
-   awk '{gsub("T2DG", ""); if($5==1) $5="M"; if($5==2) $5="F"; print $1,$2,$3,$4,$5,""} NR==20{exit}' OFS=',' /share/hw1/merge-geno.fam
-    ```
+      - Mendel's SNP definition file is similar to the plink `bim` file but has format  
+      `SNP ID`, `Chromosome`, `Base Pair Position`  
+      with each field separated by a comma. Write a Linux shell command to convert `merge-geno.bim` to Mendel SNP definition file. The first few lines of the Mendel SNP definition file should look like
+```{bash}
+    awk '{print $2,$1,$4} NR==5{exit}' OFS=',' /share/hw1/merge-geno.bim 
+```
     
-##Question 3
+    - Mendel's pedigree file is similar to the plink `fam` file but has format  
+    `Family ID`, `Person ID`, `Father ID`, `Mother ID`, `Sex` coded as M or F, `Twin Status`  
+    with each field separated by a comma. Write a Linux shell command to convert `merge-geno.fam` to Mendel pedigree file. Since twin status is not available in plink format, we put nothing for that field. Also Mendel limits Person ID to have length less than or equal to 8 characters, so we have to strip the string `T2DG` from the IDs. First few lines of the Mendel pedigree should look like
+```{bash}
+   awk '{gsub("T2DG", ""); if($5==1) $5="M"; if($5==2) $5="F"; print $1,$2,$3,$4,$5,""} NR==5{exit}' OFS=',' /share/hw1/merge-geno.fam
+```
 
-1.
+# Q3. R Batch Run
 
-Modify runSim.R Script
+In class we discussed using R to organize simulation studies. 
 
-    ```{bash}
+1. Expand the `runSim.R`  script in D2L to include arguments `seed` (random seed), `n` (sample size), `dist` (distribution) and `rep` (number of simulation replicates). When `dist="gaussian"`, generate data from standard normal; when `dist="t1"`, generate data from t-distribution with degree of freedom 1 (same as Cauchy distribution); when `dist="t5"`, generate data from t-distribution with degree of freedom 5. Calling `runSim.R` will (1) set random seed according to argument `seed`, (2) generate data according to argument `dist`, (3) compute the primed-indexed average estimator in class and the classical sample average estimator for each simulation replicate, (4) report the average mean squared error (MSE). Notice that all three distributions have true mean `0`. 
+$$
+  \frac{\sum_{r=1}^{\text{rep}} (\widehat \mu_r - \mu_{\text{true}})^2}{\text{rep}}
+$$
+for both methods.
+
+```{bash}
    Rscript runSim.R seed=123 n=100 dist=t5  rep=100
-    ```
+```
 
-2.
+2. Modify the `autoSim.R` script in D2L to run simulations with combinations of sample sizes `nVals = seq(100, 500, by=100)` and distributions `distTypes = c("gaussian", "t1", "t5")` and write output to appropriately named files. Use `rep = 50`, and `seed = 280`. 
 
-Modify autoSim.R file
-
-    ```{bash}
+```{bash}
    Rscript autoSim.R
-    ```
-    
-3.
+```
 
-Run Script That Creates Table
-    ```{bash}
-   Rscript hw1table.R
-    ```
+3. Write an R script to collect simulation results from output files and print average MSEs in a table of format
+
+
+```{R}
+#set nVals and distribution types to loop over
+nVals = seq(100, 500, by=100)
+distTypes = c("t1", "t5","gaussian")
+
+#looping variable for output matrix
+i=1
+j=1
+
+#create Output Matrix
+tableOut = matrix(0,10,3)
+colnames(tableOut) <- distTypes
+rName = NULL
+
+#loop through all the files and populate Output Matrix
+
+for (n in nVals) {
+  for(t in distTypes){
+    
+    oFile = paste("n", n,t,".txt", sep="")
+    tableOut[i,j] = read.table(oFile)[1,2] 
+    tableOut[i+1,j] = read.table(oFile)[2,2]
+    j=j+1
+  }
+  rName = cbind(rName,paste(n," PrimeAverage"))
+  rName = cbind(rName,paste(n," SampleAverage"))
+  j=1
+  i=i+2
+}
+
+rownames(tableOut)<- rName[1,]
+
+library(kableExtra)
+kable(tableOut,"markdown")
+```
+
