@@ -1,0 +1,23 @@
+---
+
+title: "Bios CPH685 Homework 2-Anthony Vicenti"
+
+subtitle: Due NOV 1, 2019 @ 11:59PM
+
+output: 
+
+      html_document:
+
+        toc: true
+
+        toc_depth: 4
+
+csl: ../apa.csl
+
+---
+
+# Q1. Pre-process, pare down, tidy, and save the data.
+
+
+
+
