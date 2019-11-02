@@ -19,5 +19,443 @@ csl: ../apa.csl
 # Q1. Pre-process, pare down, tidy, and save the data.
 
 
+```{R}
+
+library("rvest")
+library("tidyverse")
+library("xml2")
+
+#New York, NY
+
+full_df_NY <- data.frame()
+
+page_results <- seq(from = 0, to = 6);
+
+for(i in page_results) {
+  
+  first_page_url <- 'https://www.indeed.com/jobs?as_and=data+scientist&as_phr=&as_any=&as_not=&as_ttl=data+scientist&as_cmp=&jt=all&st=&sr=directhire&as_src=&salary=&radius=25&l=New+York%2C+NY&fromage=any&limit=50&sort=date&psf=advsrch&from=advancedsearch'
+  if(i == 0){
+    url=first_page_url;
+  }
+  else{
+  url <- paste0(first_page_url, "&start=", i*50)
+  }
+  page <- xml2::read_html(url)
+  
+  Sys.sleep(2)
+  
+  job_title <- page %>% 
+    rvest::html_nodes("div") %>%
+    rvest::html_nodes(xpath = '//*[@data-tn-element = "jobTitle"]') %>%
+    rvest::html_attr("title")
+  
+  job_location <-page %>% 
+    rvest::html_nodes("div") %>% 
+    rvest::html_nodes(xpath = '//*[@class="location accessible-contrast-color-location"]')%>% 
+    rvest::html_text() %>%
+    stringi::stri_trim_both()
+  
+  company_name <-page %>% 
+    rvest::html_nodes("span")  %>% 
+    rvest::html_nodes(xpath = '//*[@class="company"]')  %>% 
+    rvest::html_text() %>%
+    stringi::stri_trim_both()
+  
+  # get links
+  links <- page %>% 
+    rvest::html_nodes("div") %>%
+    rvest::html_nodes(xpath = '//*[@data-tn-element="jobTitle"]') %>%
+    rvest::html_attr("href")
+  
+  job_description <- c()
+  company_review_count <- c()
+  company_review <- c()
+  job_salary <- c()
+  
+  for(i in seq_along(links)) {
+    
+    url <- paste0("https://indeed.com/", links[i])
+    page <- xml2::read_html(url)
+    
+    job_description[[i]] <- page %>%
+      rvest::html_nodes("span")  %>% 
+      rvest::html_nodes(xpath = '//*[@class="jobsearch-jobDescriptionText"]') %>% 
+      rvest::html_text() %>%
+      stringi::stri_trim_both()
+    
+    
+      company_review_count[[i]] <-page %>% 
+      rvest::html_nodes(xpath = '//meta[@itemprop="ratingCount"]') %>%
+      rvest::html_attr('content')
+      company_review_count[[i]]<-company_review_count[[i]][1]
+      
+      company_review[[i]] <-page %>% 
+      rvest::html_nodes(xpath = '//meta[@itemprop="ratingValue"]') %>%
+      rvest::html_attr('content')
+      company_review[[i]]<-company_review[[i]][1]
+      
+      job_salary[[i]] <-page %>% 
+        rvest::html_nodes(xpath = '//span[@class="icl-u-xs-mr--xs"]') %>%
+        rvest::html_text()  %>%
+        stringi::stri_trim_both()
+
+  }
+  
+  company_review=as.character(company_review)
+  company_review_count=as.character(company_review_count)
+  job_salary=as.character(job_salary)
+  
+  df <- data.frame(job_title, company_name, job_location, job_description,company_review,company_review_count,job_salary)
+  full_df_NY <- rbind(full_df_NY, df)
+  
+}
+  
+#Los Angeles, CA
+
+full_df_LA <- data.frame()
+
+page_results <- seq(from = 0, to = 2);
+
+for(i in page_results) {
+  
+  first_page_url <- 'https://www.indeed.com/jobs?as_and=data+scientist&as_phr=&as_any=&as_not=&as_ttl=data+scientist&as_cmp=&jt=all&st=&sr=directhire&as_src=&salary=&radius=25&l=Los+Angeles%2C+CA&fromage=any&limit=50&sort=date&psf=advsrch&from=advancedsearch'
+  if(i == 0){
+    url=first_page_url;
+  }
+  else{
+  url <- paste0(first_page_url, "&start=", i*50)
+  }
+  page <- xml2::read_html(url)
+  
+  Sys.sleep(2)
+  
+  job_title <- page %>% 
+    rvest::html_nodes("div") %>%
+    rvest::html_nodes(xpath = '//*[@data-tn-element = "jobTitle"]') %>%
+    rvest::html_attr("title")
+  
+  job_location <-page %>% 
+    rvest::html_nodes("div") %>% 
+    rvest::html_nodes(xpath = '//*[@class="location accessible-contrast-color-location"]')%>% 
+    rvest::html_text() %>%
+    stringi::stri_trim_both()
+  
+  company_name <-page %>% 
+    rvest::html_nodes("span")  %>% 
+    rvest::html_nodes(xpath = '//*[@class="company"]')  %>% 
+    rvest::html_text() %>%
+    stringi::stri_trim_both()
+  
+  # get links
+  links <- page %>% 
+    rvest::html_nodes("div") %>%
+    rvest::html_nodes(xpath = '//*[@data-tn-element="jobTitle"]') %>%
+    rvest::html_attr("href")
+  
+  job_description <- c()
+  company_review_count <- c()
+  company_review <- c()
+  job_salary <- c()
+  
+  for(i in seq_along(links)) {
+    
+    url <- paste0("https://indeed.com/", links[i])
+    page <- xml2::read_html(url)
+    
+    job_description[[i]] <- page %>%
+      rvest::html_nodes("span")  %>% 
+      rvest::html_nodes(xpath = '//*[@class="jobsearch-jobDescriptionText"]') %>% 
+      rvest::html_text() %>%
+      stringi::stri_trim_both()
+    
+    
+      company_review_count[[i]] <-page %>% 
+      rvest::html_nodes(xpath = '//meta[@itemprop="ratingCount"]') %>%
+      rvest::html_attr('content')
+      company_review_count[[i]]<-company_review_count[[i]][1]
+      
+      company_review[[i]] <-page %>% 
+      rvest::html_nodes(xpath = '//meta[@itemprop="ratingValue"]') %>%
+      rvest::html_attr('content')
+      company_review[[i]]<-company_review[[i]][1]
+      
+        job_salary[[i]] <-page %>% 
+        rvest::html_nodes(xpath = '//span[@class="icl-u-xs-mr--xs"]') %>%
+        rvest::html_text()  %>%
+        stringi::stri_trim_both()
+  }
+  
+  company_review=as.character(company_review)
+  company_review_count=as.character(company_review_count)
+  job_salary=as.character(job_salary)
+  
+  df <- data.frame(job_title, company_name, job_location, job_description,company_review,company_review_count,job_salary)
+  full_df_LA <- rbind(full_df_LA, df)
+  
+}
+
+#Chicago, IL
+
+full_df_Ch <- data.frame()
+
+page_results <- seq(from = 0, to = 2);
+
+for(i in page_results) {
+  
+  first_page_url <- 'https://www.indeed.com/jobs?as_and=data+scientist&as_phr=&as_any=&as_not=&as_ttl=data+scientist&as_cmp=&jt=all&st=&sr=directhire&as_src=&salary=&radius=25&l=Chicago%2C+IL&fromage=any&limit=50&sort=date&psf=advsrch&from=advancedsearch'
+  if(i == 0){
+    url=first_page_url;
+  }
+  else{
+  url <- paste0(first_page_url, "&start=", i*50)
+  }
+  page <- xml2::read_html(url)
+  
+  Sys.sleep(2)
+  
+  job_title <- page %>% 
+    rvest::html_nodes("div") %>%
+    rvest::html_nodes(xpath = '//*[@data-tn-element = "jobTitle"]') %>%
+    rvest::html_attr("title")
+  
+  job_location <-page %>% 
+    rvest::html_nodes("div") %>% 
+    rvest::html_nodes(xpath = '//*[@class="location accessible-contrast-color-location"]')%>% 
+    rvest::html_text() %>%
+    stringi::stri_trim_both()
+  
+  company_name <-page %>% 
+    rvest::html_nodes("span")  %>% 
+    rvest::html_nodes(xpath = '//*[@class="company"]')  %>% 
+    rvest::html_text() %>%
+    stringi::stri_trim_both()
+  
+  # get links
+  links <- page %>% 
+    rvest::html_nodes("div") %>%
+    rvest::html_nodes(xpath = '//*[@data-tn-element="jobTitle"]') %>%
+    rvest::html_attr("href")
+  
+  job_description <- c()
+  company_review_count <- c()
+  company_review <- c()
+  job_salary <- c()
+  
+  for(i in seq_along(links)) {
+    
+    url <- paste0("https://indeed.com/", links[i])
+    page <- xml2::read_html(url)
+    
+    job_description[[i]] <- page %>%
+      rvest::html_nodes("span")  %>% 
+      rvest::html_nodes(xpath = '//*[@class="jobsearch-jobDescriptionText"]') %>% 
+      rvest::html_text() %>%
+      stringi::stri_trim_both()
+    
+    
+      company_review_count[[i]] <-page %>% 
+      rvest::html_nodes(xpath = '//meta[@itemprop="ratingCount"]') %>%
+      rvest::html_attr('content')
+      company_review_count[[i]]<-company_review_count[[i]][1]
+      
+      company_review[[i]] <-page %>% 
+      rvest::html_nodes(xpath = '//meta[@itemprop="ratingValue"]') %>%
+      rvest::html_attr('content')
+      company_review[[i]]<-company_review[[i]][1]
+      
+        job_salary[[i]] <-page %>% 
+        rvest::html_nodes(xpath = '//span[@class="icl-u-xs-mr--xs"]') %>%
+        rvest::html_text()  %>%
+        stringi::stri_trim_both()
+  }
+  
+  company_review=as.character(company_review)
+  company_review_count=as.character(company_review_count)
+  job_salary=as.character(job_salary)
+  
+  df <- data.frame(job_title, company_name, job_location, job_description,company_review,company_review_count,job_salary)
+  full_df_Ch <- rbind(full_df_Ch, df)
+  
+}
+
+#Houston, TX
+
+full_df_Ho <- data.frame()
+
+page_results <- seq(from = 0, to = 0);
+
+for(i in page_results) {
+  
+  first_page_url <- 'https://www.indeed.com/jobs?as_and=data+scientist&as_phr=&as_any=&as_not=&as_ttl=data+scientist&as_cmp=&jt=all&st=&sr=directhire&as_src=&salary=&radius=25&l=Houston%2C+TX&fromage=any&limit=50&sort=date&psf=advsrch&from=advancedsearch'
+  if(i == 0){
+    url=first_page_url;
+  }
+  else{
+  url <- paste0(first_page_url, "&start=", i*50)
+  }
+  page <- xml2::read_html(url)
+  
+  Sys.sleep(2)
+  
+  job_title <- page %>% 
+    rvest::html_nodes("div") %>%
+    rvest::html_nodes(xpath = '//*[@data-tn-element = "jobTitle"]') %>%
+    rvest::html_attr("title")
+  
+  job_location <-page %>% 
+    rvest::html_nodes("div") %>% 
+    rvest::html_nodes(xpath = '//*[@class="location accessible-contrast-color-location"]')%>% 
+    rvest::html_text() %>%
+    stringi::stri_trim_both()
+  
+  company_name <-page %>% 
+    rvest::html_nodes("span")  %>% 
+    rvest::html_nodes(xpath = '//*[@class="company"]')  %>% 
+    rvest::html_text() %>%
+    stringi::stri_trim_both()
+  
+  # get links
+  links <- page %>% 
+    rvest::html_nodes("div") %>%
+    rvest::html_nodes(xpath = '//*[@data-tn-element="jobTitle"]') %>%
+    rvest::html_attr("href")
+  
+  job_description <- c()
+  company_review_count <- c()
+  company_review <- c()
+  job_salary <- c()
+  
+  for(i in seq_along(links)) {
+    
+    url <- paste0("https://indeed.com/", links[i])
+    page <- xml2::read_html(url)
+    
+    job_description[[i]] <- page %>%
+      rvest::html_nodes("span")  %>% 
+      rvest::html_nodes(xpath = '//*[@class="jobsearch-jobDescriptionText"]') %>% 
+      rvest::html_text() %>%
+      stringi::stri_trim_both()
+    
+    
+      company_review_count[[i]] <-page %>% 
+      rvest::html_nodes(xpath = '//meta[@itemprop="ratingCount"]') %>%
+      rvest::html_attr('content')
+      company_review_count[[i]]<-company_review_count[[i]][1]
+      
+      company_review[[i]] <-page %>% 
+      rvest::html_nodes(xpath = '//meta[@itemprop="ratingValue"]') %>%
+      rvest::html_attr('content')
+      company_review[[i]]<-company_review[[i]][1]
+      
+        job_salary[[i]] <-page %>% 
+        rvest::html_nodes(xpath = '//span[@class="icl-u-xs-mr--xs"]') %>%
+        rvest::html_text()  %>%
+        stringi::stri_trim_both()
+  }
+  
+  company_review=as.character(company_review)
+  company_review_count=as.character(company_review_count)
+  job_salary=as.character(job_salary)
+  
+  df <- data.frame(job_title, company_name, job_location, job_description,company_review,company_review_count,job_salary)
+  full_df_Ho <- rbind(full_df_Ho, df)
+  
+}
+
+#Phoenix, AZ
+
+full_df_Ph <- data.frame()
+
+page_results <- seq(from = 0, to = 0);
+
+for(i in page_results) {
+  
+  first_page_url <- 'https://www.indeed.com/jobs?as_and=data+scientist&as_phr=&as_any=&as_not=&as_ttl=data+scientist&as_cmp=&jt=all&st=&sr=directhire&as_src=&salary=&radius=25&l=Phoenix%2C+AZ&fromage=any&limit=50&sort=date&psf=advsrch&from=advancedsearch'
+  if(i == 0){
+    url=first_page_url;
+  }
+  else{
+  url <- paste0(first_page_url, "&start=", i*50)
+  }
+  page <- xml2::read_html(url)
+  
+  Sys.sleep(2)
+  
+  job_title <- page %>% 
+    rvest::html_nodes("div") %>%
+    rvest::html_nodes(xpath = '//*[@data-tn-element = "jobTitle"]') %>%
+    rvest::html_attr("title")
+  
+  job_location <-page %>% 
+    rvest::html_nodes("div") %>% 
+    rvest::html_nodes(xpath = '//*[@class="location accessible-contrast-color-location"]')%>% 
+    rvest::html_text() %>%
+    stringi::stri_trim_both()
+  
+  company_name <-page %>% 
+    rvest::html_nodes("span")  %>% 
+    rvest::html_nodes(xpath = '//*[@class="company"]')  %>% 
+    rvest::html_text() %>%
+    stringi::stri_trim_both()
+  
+  # get links
+  links <- page %>% 
+    rvest::html_nodes("div") %>%
+    rvest::html_nodes(xpath = '//*[@data-tn-element="jobTitle"]') %>%
+    rvest::html_attr("href")
+  
+  job_description <- c()
+  company_review_count <- c()
+  company_review <- c()
+  job_salary <- c()
+  
+  for(i in seq_along(links)) {
+    
+    url <- paste0("https://indeed.com/", links[i])
+    page <- xml2::read_html(url)
+    
+    job_description[[i]] <- page %>%
+      rvest::html_nodes("span")  %>% 
+      rvest::html_nodes(xpath = '//*[@class="jobsearch-jobDescriptionText"]') %>% 
+      rvest::html_text() %>%
+      stringi::stri_trim_both()
+    
+    
+      company_review_count[[i]] <-page %>% 
+      rvest::html_nodes(xpath = '//meta[@itemprop="ratingCount"]') %>%
+      rvest::html_attr('content')
+      company_review_count[[i]]<-company_review_count[[i]][1]
+      
+      company_review[[i]] <-page %>% 
+      rvest::html_nodes(xpath = '//meta[@itemprop="ratingValue"]') %>%
+      rvest::html_attr('content')
+      company_review[[i]]<-company_review[[i]][1]
+      
+        job_salary[[i]] <-page %>% 
+        rvest::html_nodes(xpath = '//span[@class="icl-u-xs-mr--xs"]') %>%
+        rvest::html_text()  %>%
+        stringi::stri_trim_both()
+  }
+  
+  company_review=as.character(company_review)
+  company_review_count=as.character(company_review_count)
+  job_salary=as.character(job_salary)
+  
+  df <- data.frame(job_title, company_name, job_location, job_description,company_review,company_review_count,job_salary)
+  full_df_Ph <- rbind(full_df_Ph, df)
+}  
+
+
+```
+
+```{R}
+
+#Pre-process and clean data
+
+final_df <- rbind(full_df_NY,full_df_LA,full_df_Ch,full_df_Ho,full_df_Ph)
+
+
+write_rds(final_df, "Indeed.rds")
+```
 
 
