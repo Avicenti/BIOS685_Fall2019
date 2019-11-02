@@ -453,7 +453,32 @@ for(i in page_results) {
 #Pre-process and clean data
 
 final_df <- rbind(full_df_NY,full_df_LA,full_df_Ch,full_df_Ho,full_df_Ph)
+final_df$job_title<-as.character(final_df$job_title)
+final_df$company_name<-as.character(final_df$company_name)
+final_df$job_location<-as.character(final_df$job_location)
+final_df$job_description<-as.character(final_df$job_description)
+final_df$company_review<-as.numeric(as.character(final_df$company_review))
+final_df$company_review_count<-as.numeric(as.character(final_df$company_review_count))
+final_df$job_salary <-as.character(final_df$job_salary)
 
+for(i in 1:length(final_df$job_location)){
+  if(str_detect(final_df$job_location[i], ", NY")|| str_detect(final_df$job_location[i], ", NJ")){
+    final_df$job_location[i]<-"New York, NY"
+  }
+    if(str_detect(final_df$job_location[i], ", CA")){
+    final_df$job_location[i]<-"Los Angeles, CA"
+    }
+    if(str_detect(final_df$job_location[i], ", IL")){
+    final_df$job_location[i]<-"Chicago, IL"
+    }
+    if(str_detect(final_df$job_location[i], ", TX")){
+    final_df$job_location[i]<-"Houston, TX"
+    }
+    if(str_detect(final_df$job_location[i], ", AZ")){
+    final_df$job_location[i]<-"Phoenix, AZ"
+  }
+  
+}
 
 write_rds(final_df, "Indeed.rds")
 ```
