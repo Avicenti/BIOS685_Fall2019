@@ -94,11 +94,16 @@ for(i in page_results) {
       rvest::html_attr('content')
       company_review[[i]]<-company_review[[i]][1]
       
-      job_salary[[i]] <-page %>% 
+      js <-page %>% 
         rvest::html_nodes(xpath = '//span[@class="icl-u-xs-mr--xs"]') %>%
         rvest::html_text()  %>%
         stringi::stri_trim_both()
-
+      if(identical(js, character(0))){
+        job_salary[[i]]=NA
+      }
+      else{
+      job_salary[[i]]<-js
+      }
   }
   
   company_review=as.character(company_review)
@@ -179,10 +184,16 @@ for(i in page_results) {
       rvest::html_attr('content')
       company_review[[i]]<-company_review[[i]][1]
       
-        job_salary[[i]] <-page %>% 
+      js <-page %>% 
         rvest::html_nodes(xpath = '//span[@class="icl-u-xs-mr--xs"]') %>%
         rvest::html_text()  %>%
         stringi::stri_trim_both()
+      if(identical(js, character(0))){
+        job_salary[[i]]=NA
+      }
+      else{
+      job_salary[[i]]<-js
+      }
   }
   
   company_review=as.character(company_review)
@@ -263,10 +274,16 @@ for(i in page_results) {
       rvest::html_attr('content')
       company_review[[i]]<-company_review[[i]][1]
       
-        job_salary[[i]] <-page %>% 
+      js <-page %>% 
         rvest::html_nodes(xpath = '//span[@class="icl-u-xs-mr--xs"]') %>%
         rvest::html_text()  %>%
         stringi::stri_trim_both()
+      if(identical(js, character(0))){
+        job_salary[[i]]=NA
+      }
+      else{
+      job_salary[[i]]<-js
+      }
   }
   
   company_review=as.character(company_review)
@@ -347,10 +364,16 @@ for(i in page_results) {
       rvest::html_attr('content')
       company_review[[i]]<-company_review[[i]][1]
       
-        job_salary[[i]] <-page %>% 
+      js <-page %>% 
         rvest::html_nodes(xpath = '//span[@class="icl-u-xs-mr--xs"]') %>%
         rvest::html_text()  %>%
         stringi::stri_trim_both()
+      if(identical(js, character(0))){
+        job_salary[[i]]=NA
+      }
+      else{
+      job_salary[[i]]<-js
+      }
   }
   
   company_review=as.character(company_review)
@@ -431,10 +454,16 @@ for(i in page_results) {
       rvest::html_attr('content')
       company_review[[i]]<-company_review[[i]][1]
       
-        job_salary[[i]] <-page %>% 
+      js <-page %>% 
         rvest::html_nodes(xpath = '//span[@class="icl-u-xs-mr--xs"]') %>%
         rvest::html_text()  %>%
         stringi::stri_trim_both()
+      if(identical(js, character(0))){
+        job_salary[[i]]=NA
+      }
+      else{
+      job_salary[[i]]<-js
+      }
   }
   
   company_review=as.character(company_review)
@@ -461,10 +490,47 @@ final_df$company_review<-as.numeric(as.character(final_df$company_review))
 final_df$company_review_count<-as.numeric(as.character(final_df$company_review_count))
 final_df$job_salary <-as.character(final_df$job_salary)
 
+final_df$ML<- 0
+final_df$py<- 0
+final_df$lin<- 0
+final_df$sas<- 0
+final_df$r<- 0
+final_df$matl<- 0
+final_df$sql<- 0
+final_df$had<- 0
+
+for(i in 1:length(final_df$job_description)){
+    if(str_detect(final_df$job_description[i], fixed("machine learning", ignore_case=TRUE))){
+    final_df$ML[i]<-1
+    }
+    if(str_detect(final_df$job_description[i], fixed("python", ignore_case=TRUE))){
+    final_df$py[i]<-1
+    }
+    if(str_detect(final_df$job_description[i], fixed("linux", ignore_case=TRUE))){
+    final_df$lin[i]<-1
+    }
+    if(str_detect(final_df$job_description[i], fixed("sas", ignore_case=TRUE))){
+    final_df$sas[i]<-1
+    }
+    if(str_detect(final_df$job_description[i], fixed(" r ", ignore_case=TRUE)) || str_detect(final_df$job_description[i], fixed(" r,",ignore_case=TRUE))){
+    final_df$r[i]<-1
+    }
+    if(str_detect(final_df$job_description[i], fixed("matlab", ignore_case=TRUE))){
+    final_df$matl[i]<-1
+    }
+    if(str_detect(final_df$job_description[i], fixed("sql", ignore_case=TRUE))){
+    final_df$sql[i]<-1
+    }
+      if(str_detect(final_df$job_description[i], fixed("hadoop", ignore_case=TRUE))){
+    final_df$had[i]<-1
+  }
+}
+
 for(i in 1:length(final_df$job_location)){
   if(str_detect(final_df$job_location[i], ", NY")|| str_detect(final_df$job_location[i], ", NJ")){
     final_df$job_location[i]<-"New York, NY"
   }
+  
     if(str_detect(final_df$job_location[i], ", CA")){
     final_df$job_location[i]<-"Los Angeles, CA"
     }
