@@ -8,6 +8,7 @@
 #
 
 library(shiny)
+library("tidyverse")
 
 DF <- readRDS("Indeed.rds")
 
@@ -26,7 +27,7 @@ ui <- fluidPage(
     selectInput("var", 
                 label = "What would you like to look at?",
                 choices = c("Number of Jobs", "Job Ratings",
-                            "Skills", "Salary"),
+                            "Skills"),
                 selected = "Number of Jobs"),
 
         # Show a plot of the generated distribution
@@ -42,19 +43,35 @@ server <- function(input, output) {
 
     output$distPlot1 <- renderPlot({
         if(input$var== "Job Ratings"){
-            # generate bins based on input$bins from ui.R
             x <- subset(DF, job_location==input$city) 
             bins <- seq(0,5,.5)
-            # draw the histogram with the specified number of bins
             hist(x$company_review, col = 'darkgray', border = 'white', breaks = bins,main=input$city, xlab="Company Ratings" )
         }
         
-        if(input$var== "Number of Jobs"){
+        else if(input$var== "Skills"){
+            
+            skills <- c("machine learning", "python","linux","sas", "R", "matlab","sql","hadoop")
+            x <- subset(DF, job_location==input$city)
+            skill_total <- c(sum(x$ML),sum(x$py),sum(x$lin),sum(x$sas),sum(x$r),sum(x$matl),sum(x$sql),sum(x$had))
+            df2<-data.frame(skills,skill_total)
+            # draw the histogram with the specified number of bins
+            ggplot(df2,aes(x= reorder(skills,-skill_total), y = skill_total)) +geom_col()+labs(title = "Skill Distribution By City", x='Skill', y='Count')
+        } 
+        
+        else if(input$var== "Number of Jobs"){
+            
             ggplot(data = DF) + 
-                geom_bar(mapping = aes(x = DF$job_location))
+                
+                geom_bar(mapping = aes(x = DF$job_location)) + labs(title = "Job Count By City", x='City', y='Count')
+            
         }
+        
+        
+            })
+            
+        
 
-    })
+    
     
     output$distPlot2 <- renderPlot({
         
@@ -67,7 +84,16 @@ server <- function(input, output) {
                    mean(subset(DF, job_location=="Phoenix, AZ")$company_review,na.rm=TRUE))
             df2<-data.frame(City,Average_Rating)
             # draw the histogram with the specified number of bins
-            ggplot(df2,aes(City,Average_Rating)) +geom_col()+labs(title = "Average Employer Rating By City")
+            ggplot(df2,aes(x = reorder(City,-Average_Rating), y =Average_Rating)) +geom_col()+labs(title = "Average Employer Rating By City", x='City', y='Rating')
+        }
+        
+        else if(input$var== "Skills"){
+            
+            skills <- c("machine learning", "python","linux","sas", "R", "matlab","sql","hadoop")
+            skill_total <- c(sum(DF$ML),sum(DF$py),sum(DF$lin),sum(DF$sas),sum(DF$r),sum(DF$matl),sum(DF$sql),sum(DF$had))
+            df2<-data.frame(skills,skill_total)
+            # draw the histogram with the specified number of bins
+            ggplot(df2,aes(x= reorder(skills,-skill_total), y = skill_total)) +geom_col()+labs(title = "Total Skill Distribution", x='Skill', y='Count')
         }
     })
 }
