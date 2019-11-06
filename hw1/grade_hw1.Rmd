@@ -1,12 +1,12 @@
 *Anthony Vicenti*
 
-### Overall Grade: 106/110
+### Overall Grade: 107/110
 
 ### Quality of report: 9/10
 
 -   Is the homework submitted (git tag time) before deadline (Due Sep 25, 2019 @ 11:59PM)?
 
-    No. `Thu Sep 26 04:27:59 PST`. (-1 pt)
+    Yes. `Wed Sep 25 21:17:41 2019`. 
 
 -   Is the final report in a human readable format html? 
 
@@ -36,7 +36,7 @@
 
 -   Are branches (`master` and `develop`) correctly set up? Is the hw submission put into the `master` branch?
 
-    There is no history of `develop` branch for hw1? I saw develop branch merge for hw2. (-1 pts)
+    I find `develop` branch for hw1, I saw develop branch merge for hw2. (-1 pts)
 
 -   Are there enough commits? Are commit messages clear?  
 
