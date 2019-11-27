@@ -1,0 +1,25 @@
+---
+title: "hw3"
+author: "Anthony Vicenti"
+date: "11/27/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tensorflow)
+install_tensorflow()
+```
+
+```{r}
+library(keras)
+use_implementation("tensorflow")
+library(tensorflow)
+#tfe_enable_eager_execution(device_policy = "silent")
+
+library(tfdatasets)
+library(purrr)
+```
