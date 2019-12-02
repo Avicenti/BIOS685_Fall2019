@@ -9,17 +9,133 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
-library(tensorflow)
-install_tensorflow()
-```
+## Part 1
+
+# Introduction
+  This project explores a new release of lime, an R port of a python library that explains machine learning models on a per-observatoin basis. For this project we will use a pre-trained ImageNet model available from keras to explore lime. The vgg16 model is an image classification model, which attempts to classify pictures into 1000 different categories. 
+
+Load Library and Model
 
 ```{r}
 library(keras)
-use_implementation("tensorflow")
-library(tensorflow)
-#tfe_enable_eager_execution(device_policy = "silent")
-
-library(tfdatasets)
-library(purrr)
+library(lime)
+library(magick)
+library(abind)
+model <- application_vgg16(
+  weights = "imagenet",
+  include_top = TRUE
+)
+model
 ```
+
+We will pass the following picture of a kitten into the model. 
+
+```{r}
+img <- image_read('https://www.data-imaginist.com/assets/images/kitten.jpg')
+img_path <- file.path(tempdir(), 'kitten.jpg')
+image_write(img, img_path)
+plot(as.raster(img))
+```
+
+Next we need to prepare the data for the model by formatting this image as tensors.
+
+```{r}
+image_prep <- function(x) {
+  arrays <- lapply(x, function(path) {
+    img <- image_load(path, target_size = c(224,224))
+    x <- image_to_array(img)
+    x <- array_reshape(x, c(1, dim(x)))
+    x <- imagenet_preprocess_input(x)
+  })
+  do.call(abind::abind, c(arrays, list(along = 1)))
+}
+explainer <- lime(img_path, model, image_prep)
+```
+
+This will show us what the model believes this picture to be, which is basically some sort of cat. Obviously this is correct.
+```{r}
+res <- predict(model, image_prep(img_path))
+imagenet_decode_predictions(res)
+```
+
+Now using lime, we can explore why the model came to its decisions.
+```{r}
+model_labels <- readRDS(system.file('extdata', 'imagenet_labels.rds', package = 'lime'))
+explainer <- lime(img_path, as_classifier(model, model_labels), image_prep)
+plot_superpixels(img_path)
+```
+
+We can break down images into superpixels which are basically an area of similiar pixels. This allows the model to determine if the area is important and how to classify the image. These's areas need to be big enough to capture the important parts of the picture, but not so big that the model cannot recognize the image. The following uses more superpixels.
+```{r}
+plot_superpixels(img_path, n_superpixels = 200, weight = 40)
+```
+
+The following will plot the explanations onto the image. 
+
+```{r}
+explanation <- explain(img_path, explainer, n_labels = 2, n_features = 20)
+plot_image_explanation(explanation)
+```
+
+The following will block anything that the model did not consider part of is classification.
+```{r}
+plot_image_explanation(explanation, display = 'block', threshold = 0.01)
+```
+
+The following will look at the areas that agree with and contradict the classificaation.
+```{r}
+plot_image_explanation(explanation, threshold = 0, show_negative = TRUE, fill_alpha = 0.6)
+```
+
+## Part 2
+
+Here I will continue to explore this lime model by tweeking the number of superpixels and labels with a picture of my own cat.
+
+```{r}
+img <- image_read('CatsVicenti2.jpg')
+img_path <- file.path(tempdir(), 'catVic.jpg')
+image_write(img, img_path)
+plot(as.raster(img))
+```
+
+Prepare the image and look at the default superpixels. 
+```{r}
+image_prep <- function(x) {
+  arrays <- lapply(x, function(path) {
+    img <- image_load(path, target_size = c(224,224))
+    x <- image_to_array(img)
+    x <- array_reshape(x, c(1, dim(x)))
+    x <- imagenet_preprocess_input(x)
+  })
+  do.call(abind::abind, c(arrays, list(along = 1)))
+}
+explainer <- lime(img_path, model, image_prep)
+res <- predict(model, image_prep(img_path))
+imagenet_decode_predictions(res)
+model_labels <- readRDS(system.file('extdata', 'imagenet_labels.rds', package = 'lime'))
+explainer <- lime(img_path, as_classifier(model, model_labels), image_prep)
+plot_superpixels(img_path)
+```
+
+Up the superpixels to 300 instead of 200. 
+```{r}
+plot_superpixels(img_path, n_superpixels = 300, weight = 40)
+```
+
+Plot explanation of up to 5 labels instead of 2.
+```{r}
+explanation <- explain(img_path, explainer, n_labels = 5, n_features = 20)
+plot_image_explanation(explanation)
+```
+
+The following will block anything that the model did not consider part of is classification.
+```{r}
+plot_image_explanation(explanation, display = 'block', threshold = 0.01)
+```
+
+The following will look at the areas that agree with and contradict the classificaation.
+```{r}
+plot_image_explanation(explanation, threshold = 0, show_negative = TRUE, fill_alpha = 0.6)
+```
+
+In conlusion, we find that this model classified the cat first, but after looking at the fifth label, it was also able to classify my chest/dresser. 
