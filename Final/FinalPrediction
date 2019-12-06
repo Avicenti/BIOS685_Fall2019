@@ -1,0 +1,180 @@
+---
+title: "Final"
+author: "Anthony Vicenti"
+date: "12/04/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load Library
+
+```{r}
+library("DBI")
+library("RSQLite")
+library("tidyverse")
+library(RPostgreSQL)
+
+```
+
+```{r}
+# Load configuration settings
+dbdriver <- 'PostgreSQL'
+host  <- '127.0.0.1'
+port  <- '5432'
+user  <- 'postgres'
+password <- 'postgres'
+dbname <- 'mimic'
+schema <- 'mimiciii'
+
+# Connect to the database using the configuration settings
+con <- dbConnect(dbDriver(dbdriver), dbname = dbname, #host = host, port = port, 
+                 user = user, password = password)
+
+# Set the default schema
+dbExecute(con, paste("SET search_path TO ", schema, sep=" "))
+```
+
+
+```{r}
+icustay <- tbl(con,"icustays") %>% select(1-10)
+
+icustay_detail <- dbGetQuery(con,'
+SELECT ie.subject_id, ie.hadm_id, ie.icustay_id, ie.first_careunit
+
+-- patient level factors
+, pat.gender, pat.dod
+
+-- hospital level factors
+, adm.admittime, adm.dischtime
+, ROUND( (CAST(EXTRACT(epoch FROM adm.dischtime - adm.admittime)/(60*60*24) AS numeric)), 4) AS los_hospital
+, ROUND( (CAST(EXTRACT(epoch FROM adm.admittime - pat.dob)/(60*60*24*365.242) AS numeric)), 4) AS admission_age
+, adm.ethnicity, adm.admission_type
+, adm.hospital_expire_flag
+, DENSE_RANK() OVER (PARTITION BY adm.subject_id ORDER BY adm.admittime) AS hospstay_seq
+, CASE
+    WHEN DENSE_RANK() OVER (PARTITION BY adm.subject_id ORDER BY adm.admittime) = 1 THEN True
+    ELSE False END AS first_hosp_stay
+
+-- icu level factors
+, ie.intime, ie.outtime
+, ROUND( (CAST(EXTRACT(epoch FROM ie.outtime - ie.intime)/(60*60*24) AS numeric)), 4) AS los_icu
+, DENSE_RANK() OVER (PARTITION BY ie.hadm_id ORDER BY ie.intime) AS icustay_seq
+
+-- first ICU stay *for the current hospitalization*
+, CASE
+    WHEN DENSE_RANK() OVER (PARTITION BY ie.hadm_id ORDER BY ie.intime) = 1 THEN True
+    ELSE False END AS first_icu_stay
+
+FROM icustays ie
+INNER JOIN admissions adm
+    ON ie.hadm_id = adm.hadm_id
+INNER JOIN patients pat
+    ON ie.subject_id = pat.subject_id
+WHERE adm.has_chartevents_data = 1
+ORDER BY ie.subject_id, adm.admittime, ie.intime;
+')
+
+icustay_detail <- as_tibble(icustay_detail) 
+```
+
+```{r}
+cohort <- icustay_detail %>% filter(admission_age >18 & admission_age < 90 & icustay_seq ==1 & admission_type == 'EMERGENCY')
+dim(cohort)
+names(cohort)
+```
+
+```{r}
+hr_id <- c(
+  211,220045
+)
+
+sbp_id <-  c(     
+      6 # ABP [Systolic]
+    , 51 # Arterial BP [Systolic]
+    , 455 # NBP [Systolic]
+    , 6701 # Arterial BP #2 [Systolic]
+    , 220050 # Arterial Blood Pressure systolic
+    , 220179 # Non Invasive Blood Pressure systolic
+    )
+
+temp_id <- c(
+      676 # Temperature C
+    , 677 # Temperature C (calc)
+    , 678 # Temperature F
+    , 679 # Temperature F (calc)
+    , 223761 # Temperature Fahrenheit
+    , 223762 # Temperature Celsius
+)
+
+SpO2_itemid <- tbl(con,"d_items") %>%
+  filter(str_detect(label, "SpO2"))%>%
+  as_tibble()
+SpO2_id <- c(646,220277)
+
+rr_id <- c(219, 615, 618)
+
+cr_itemid <- tbl(con,"d_items") %>%
+  filter(str_detect(label, "Creatinine")) %>%
+  as_tibble()
+cr_id <- c(220615, 1525)
+
+# D_labitems table and corresponding to labevents table. 
+po_id  <- c(50822, 50971) 
+
+so_id <- c(50824, 50983)
+
+bi_id <- c(50803, 50804, 50882)
+
+wbc_id <- c(51300, 51301)
+
+gl_id <- c(50809,50931)
+```
+
+```{r}
+LabTests<-tbl(con,"d_labitems") %>% as_tibble()
+
+
+ch_id <- c(50902) #Chloride
+
+
+he_id <- c(51221) #hematocrit
+
+ma_id <- c(50960) #magnesium
+
+ca_id <- c(50893) #calcium
+
+ph_id <- c(50970) #phosphorus
+
+la_id <- c(50813) #lactate
+
+```
+
+```{r}
+cov_item_id <- paste(c(la_id),collapse=",")
+labs <- dbGetQuery(con,paste("SELECT  ie.subject_id, ie.hadm_id, ie.intime, DENSE_RANK() OVER (PARTITION BY ie.hadm_id ORDER BY ie.intime) AS icustay_seq, l.subject_id, l.itemid, l.charttime, l.valuenum
+                             ,DENSE_RANK() OVER (PARTITION BY l.subject_id ORDER BY l.charttime) AS lab_seq
+                             FROM icustays ie
+                              INNER JOIN labevents l
+                              ON ie.subject_id = l.subject_id
+                            where itemid in (", cov_item_id,") and valuenum is not null",sep=""))
+```
+
+```{r}
+cov_item_id <- paste(c(hr_id,sbp_id,temp_id,SpO2_id,rr_id,cr_id,po_id,so_id,bi_id,wbc_id,gl_id,ch_id,he_id,ma_id,ca_id,ph_id,la_id),collapse=",")
+labs <- dbGetQuery(con,paste("SELECT  l.subject_id, l.itemid, l.charttime, l.valuenum from labevents l where itemid in (", cov_item_id,") and valuenum is not null",sep=""))
+```
+
+```{r}
+labs <- as_tibble(labs) %>% filter(icustay_id %in% cohort$icustay_id)
+labs <- labs %>% group_by(icustay_id,itemid) %>% arrange(charttime) %>% filter(row_number() == 1)
+labs_w <- spread (labs,itemid,valuenum)%>% group_by(icustay_id) %>% arrange(charttime) %>% filter(row_number() == 1)
+#labs_w <- labs_w[complete.cases(labs_w),]
+data <- cohort %>% left_join(labs_w,by="icustay_id") 
+```
+
+```{r}
+dbDisconnect(con)
+```
